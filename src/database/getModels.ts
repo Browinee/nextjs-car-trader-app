@@ -2,7 +2,7 @@ import {openDB} from "../openDB";
 
 
 export interface Model {
-    make: string;
+    model: string;
     count: number;
 }
 
