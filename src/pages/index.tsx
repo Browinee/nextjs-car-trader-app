@@ -6,7 +6,7 @@ import InputLabel from '@material-ui/core/InputLabel';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import {useRouter} from "next/router";
-import {Paper, Grid, MenuItem} from "@material-ui/core";
+import {Paper, Grid, MenuItem, Button} from "@material-ui/core";
 import getMakes, {Make} from "../database/getMakes";
 import getModels from "../database/getModels";
 import {getAsString} from "../utils/getAsString";
@@ -36,6 +36,7 @@ export default function Home({makes}: HomeProps) {
         minPrice: getAsString(minPrice) || ALL,
         maxPrice: getAsString(maxPrice) || ALL,
     }
+
     return (
         <Formik initialValues={initialValues} onSubmit={() => {
         }}>
@@ -117,6 +118,9 @@ export default function Home({makes}: HomeProps) {
                             </Field>
                         </FormControl>
                     </Grid>
+                </Grid>
+                <Grid item xs={12}>
+                    <Button type="submit" variant="outlined">Search for cars!</Button>
                 </Grid>
             </Paper>
         </Formik>);
