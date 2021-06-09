@@ -21,15 +21,16 @@ const useStyles = makeStyles((theme: Theme) => ({
 }));
 
 
-export interface HomeProps {
+export interface searchProps {
     makes: Make[];
     models: Model[];
+    singleColumn?: boolean;
 }
 
 const ALL = "all";
 const PRICES = [500, 1000, 5000, 15000, 25000, 50000, 250000];
 
-export default function Home({makes, models}: HomeProps) {
+export default function Search({makes, models, singleColumn}: searchProps) {
     const classes = useStyles();
     const {query: {make, model, minPrice, maxPrice}} = useRouter();
     const initialValues = {
@@ -40,17 +41,18 @@ export default function Home({makes, models}: HomeProps) {
     }
     const handleSubmit = (values) => {
         router.push({
-            pathname: "/",
+            pathname: "/cars",
             query: {...values, page: 1},
         }, undefined, {shallow: true});
     };
+    const smValue = singleColumn ? 12 : 6;
     return (
         <Formik initialValues={initialValues} onSubmit={handleSubmit}>
             {({values}) => (
                 <Form>
                     <Paper elevation={5} className={classes.paper}>
                         <Grid container spacing={3}>
-                            <Grid item xs={12} sm={6}>
+                            <Grid item xs={12} sm={smValue}>
                                 <FormControl fullWidth variant="outlined">
                                     <InputLabel id="search-make">Make</InputLabel>
                                     <Field name="make" as={Select} label="Make" labelId="search-make">
@@ -69,10 +71,10 @@ export default function Home({makes, models}: HomeProps) {
                                     </Field>
                                 </FormControl>
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            <Grid item xs={12} sm={smValue}>
                                 <ModelSelectField make={values.make} name="model" models={models}/>
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            <Grid item xs={12} sm={smValue}>
                                 <FormControl fullWidth variant="outlined">
                                     <InputLabel id="search-min-price">Min Price</InputLabel>
                                     <Field name="minPrice" as={Select} label="Min Price" labelId="search-min-price">
@@ -91,7 +93,7 @@ export default function Home({makes, models}: HomeProps) {
                                     </Field>
                                 </FormControl>
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            <Grid item xs={12} sm={smValue}>
                                 <FormControl fullWidth variant="outlined">
                                     <InputLabel id="search-max-price">Max Price</InputLabel>
                                     <Field name="maxPrice" as={Select} label="Max Price" labelId="search-Max-price">
@@ -110,16 +112,18 @@ export default function Home({makes, models}: HomeProps) {
                                     </Field>
                                 </FormControl>
                             </Grid>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                color="primary"
-                                fullWidth
-                            >
-                                Search
-                            </Button>
+
+
+                            <Grid item xs={12}>
+                                <Button
+                                    type="submit"
+                                    variant="contained"
+                                    color="primary"
+                                    fullWidth
+                                >
+                                    Search
+                                </Button>
+                            </Grid>
                         </Grid>
                     </Paper>
                 </Form>
@@ -138,8 +142,9 @@ export function ModelSelectField({models, name, make, ...props}: ModelSelectProp
     const [field] = useField({
         name,
     });
-    const { setFieldValue } = useFormikContext();
+    const {setFieldValue} = useFormikContext();
     const {data} = useSWR<Model[]>(`/api/models?make=${make}`, {
+        dedupingInterval: 60 * 1000, // prevent sending same request within 60s
         onSuccess: (newValues) => {
             const isMakeChanged: boolean = !newValues.map(model => model.model).includes(field.value);
             if (isMakeChanged) {
