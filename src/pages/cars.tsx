@@ -1,17 +1,18 @@
 import {Grid} from '@material-ui/core';
-import { PaginationRenderItemParams } from '@material-ui/lab';
-import Pagination from '@material-ui/lab/Pagination';
-import PaginationItem from '@material-ui/lab/PaginationItem';
 import {GetServerSideProps} from 'next';
-import Link from 'next/link';
 import {useRouter} from 'next/router';
-import {ParsedUrlQuery} from 'querystring';
+import {stringify} from 'querystring';
+import useSWR from "swr";
+import deepEqual from "fast-deep-equal";
+import {useState} from "react";
 import Search from '.';
 import {CarModel} from '../../api/Car';
 import getMakes, {Make} from '../database/getMakes';
 import getModels, {Model} from '../database/getModels';
 import {getPaginatedCars} from '../database/getPaginatedCars';
 import {getAsString} from '../utils/getAsString';
+import {CarPagination} from "../components/CarPagination";
+import {CarCard} from "../components/CarCard";
 
 
 export interface CarsListProps {
@@ -24,51 +25,34 @@ export interface CarsListProps {
 export default function CarsList({makes, models, cars, totalPages}: CarsListProps) {
     const {query} = useRouter();
     const page = +getAsString(query.page) || 1; // page could be string or array
+    const [serverQuery] = useState(query);
+    const {data} = useSWR('/api/cars?' + stringify(query), {
+        dedupingInterval: 15000,
+        // when first loading, getServerSidePros would be called, then we use initial data here to
+        // avoid redundand call. However, when we change to another page, we need to call /api/cars based on the query
+        initialData: deepEqual(query, serverQuery)
+            ? {cars, totalPages}
+            : undefined,
+    });
     return (
         <Grid container spacing={3}>
             <Grid item xs={12} sm={5} md={3} lg={2}>
-                <Search singleColumn makes={makes} models={models}/>
+                <Search singleColumn makes={makes} models={models} />
             </Grid>
-            <Grid item xs={12} sm={7} md={9} lg={10}>
-                <pre>{
-                    JSON.stringify({
-                        cars, totalPages
-                    }, null, 4)
-                }</pre>
-                <Pagination
-                    page={page}
-                    count={totalPages}
-                    renderItem={(item) => (
-                        <PaginationItem
-                            query={query}
-                            component={MaterialLink}
-                            item={item}
-                            {...item}
-                        />
-                    )}
-                />
+            <Grid container item xs={12} sm={7} md={9} lg={10} spacing={4}>
+                <Grid item xs={12}>
+                    <CarPagination totalPages={data?.totalPages} />
+                </Grid>
+                {(data?.cars || []).map((car) => (
+                    <Grid key={car.id} item xs={12} sm={6}>
+                        <CarCard car={car} />
+                    </Grid>
+                ))}
+                <Grid item xs={12}>
+                    <CarPagination totalPages={data?.totalPages} />
+                </Grid>
             </Grid>
         </Grid>
-    )
-}
-
-export interface MaterialLinkProps {
-    item: PaginationRenderItemParams;
-    query: ParsedUrlQuery;
-}
-
-export function MaterialLink({item, query, ...props}: MaterialLinkProps) {
-    console.log("prpos", {item, query});
-    return (
-        <Link href={{
-            pathname: "/cars",
-            query: {
-                ...query,
-                page: item.page
-            }
-        }}>
-            <a {...props}></a>
-        </Link>
     )
 }
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import Head from "next/head";
 import {makeStyles} from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
@@ -27,6 +28,9 @@ export default function CarDetails({car}: CarDetailsProps) {
     if (!car) return <h1>Sorr, car not found</h1>;
     return (
         <div>
+            <Head>
+                <title>{`${car.make} ${car.model}`}</title>
+            </Head>
             <Paper className={classes.paper}>
                 <Grid container spacing={2}>
                     <Grid item xs={12} sm={6} md={5}>

@@ -17,14 +17,12 @@ export async function getPaginatedCars(query: ParsedUrlQuery) {
     const page = getValueNumber(query.page) || 1;
     const rowsPerPage = getValueNumber(query.rowsPerPage) || 4;
     const offset = (page - 1) * rowsPerPage;
-    console.log("query", query, getValueStr(query.make))
     const dbParams = {
         '@make': getValueStr(query.make),
         '@model': getValueStr(query.model),
         '@minPrice': getValueNumber(query.minPrice),
         '@maxPrice': getValueNumber(query.maxPrice),
     };
-
     const carsPromise = db.all<CarModel[]>(
         `SELECT * ${mainQuery} LIMIT @rowsPerPage OFFSET @offset`,
         {
@@ -52,5 +50,5 @@ function getValueNumber(value: string | string[]) {
 
 function getValueStr(value: string | string[]) {
     const str = getAsString(value);
-    return !str ? "all" : str
+    return !str || str.toLowerCase() === 'all' ? null : str;
 }
